@@ -1,17 +1,21 @@
-﻿namespace LP2Parcial2.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace LP2Parcial2API.Models;
+
+public class Producto
 {
-    public class Producto
-    {
-        public int Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public double Price { get; set; }
-        public string Category { get; set; } = string.Empty;
-        public string Thumbnail { get; set; } = string.Empty;
-        public double Rating { get; set; }
-    }
-    public class ProductosResponse
-    {
-        public List<Producto> Products { get; set; } = new();
-    }
+    public int Id { get; set; }
+
+    [Required, MaxLength(100)]
+    public string Title { get; set; } = string.Empty;
+
+    [MaxLength(300)]
+    public string Description { get; set; } = string.Empty;
+
+    public double Price { get; set; }
+
+    [MaxLength(50)]
+    public string Category { get; set; } = string.Empty;
+    public string Thumbnail { get; set; } = string.Empty;
+    public double Rating { get; set; }
 }

@@ -1,0 +1,6 @@
+@LP2Parcial2API_HostAddress = http://localhost:5104
+
+GET {{LP2Parcial2API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
