@@ -1,0 +1,46 @@
+﻿@using LP2Parcial2.Models
+
+<div class="producto-card-pedido @(EsSeleccionado ? "seleccionado" : "")"
+     @onclick="ToggleSeleccion">
+
+    @if (EsSeleccionado)
+    {
+        <div class="check-badge">✓</div>
+    }
+
+    <img src="@Producto.Thumbnail" alt="@Producto.Title" loading="lazy" />
+
+    <div class="info">
+        <h3>@Producto.Title</h3>
+        <div class="precio">$@Producto.Price.ToString("F2")</div>
+
+        @if (EsSeleccionado)
+        {
+            <div class="cantidad-ctrl" @onclick:stopPropagation="true">
+                <button @onclick="Reducir">−</button>
+                <span>@Cantidad</span>
+                <button @onclick="Agregar">+</button>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Producto Producto { get; set; } = new();
+
+    [Parameter] public bool EsSeleccionado { get; set; }
+    [Parameter] public int Cantidad { get; set; } = 1;
+    [Parameter] public EventCallback<Producto> OnToggle { get; set; }
+    [Parameter] public EventCallback<Producto> OnAgregar { get; set; }
+    [Parameter] public EventCallback<Producto> OnReducir { get; set; }
+
+    private async Task ToggleSeleccion()
+        => await OnToggle.InvokeAsync(Producto);
+
+    private async Task Agregar()
+        => await OnAgregar.InvokeAsync(Producto);
+
+    private async Task Reducir()
+        => await OnReducir.InvokeAsync(Producto);
+}

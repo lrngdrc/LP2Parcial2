@@ -1,0 +1,24 @@
+﻿@page "/"
+@using LP2Parcial2.Components
+@inject IConfiguration Config
+
+<PageTitle>Inicio — @Config["AppInfo:Nombre"]</PageTitle>
+
+<HeroBanner
+    Titulo="@($"Bienvenidos a {Config["AppInfo:Nombre"]}")"
+    Subtitulo="@Config["AppInfo:Slogan"]" />
+
+@if (_mostrarPromocion)
+{
+    <div style="background:var(--de-dorado);color:#5c3d2e;text-align:center;padding:1rem;font-weight:1000;">
+        🎉 ¡10% de descuento en tu primer pedido! Usa el código <u>I4M4C4NDY</u>
+        <button @onclick="() => _mostrarPromocion = false"
+                style="margin-left:0.7rem;border:none;background:transparent;cursor:pointer;font-size:1rem;">✖</button>
+    </div>
+}
+
+<Testimonios />
+
+@code {
+    private bool _mostrarPromocion = true;
+}

@@ -1,0 +1,62 @@
+﻿@page "/menu"
+@using LP2Parcial2.Components
+@using LP2Parcial2.Models
+@using LP2Parcial2.Services
+@inject IProductoService ProductoSvc
+
+<PageTitle>Menú — C4NDYST4R</PageTitle>
+
+<h1 style="text-align:center;padding:2rem 1rem .5rem;color:var(--de-cafe);">
+    ⭐ Nuestro Menú ⭐
+</h1>
+<p style="text-align:center;color:#888;padding:.3rem 1rem 1.5rem;">
+    Disfruta de nuestro catálogo hecho especialmente para ti.
+</p>
+
+<FiltroCategoria
+    Categorias="@_categorias"
+    CategoriaActual="@_categoriaActual"
+    OnCategoriaSeleccionada="@FiltrarPor" />
+
+@if (_cargando)
+{
+    <p style="text-align:center;padding:3rem;">⏳ Cargando productos... ⏳</p>
+}
+else if (!_productosFiltrados.Any())
+{
+    <p style="text-align:center;padding:3rem;color:#999;">No hay productos en esta categoría.</p>
+}
+else
+{
+    <div class="grid-productos">
+        @foreach (var prod in _productosFiltrados)
+        {
+            <ProductoCard Producto="@prod" />
+        }
+    </div>
+}
+@code {
+    private bool           _cargando        = true;
+    private List<Producto> _todos            = new();
+    private List<Producto> _productosFiltrados = new();
+    private List<string>   _categorias       = new() { "Todos" };
+    private string         _categoriaActual  = "Todos";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _todos = await ProductoSvc.ObtenerProductosAsync();
+
+        var cats = _todos.Select(p => p.Category).Distinct().ToList();
+        _categorias = new List<string> { "Todos" }.Concat(cats).ToList();
+
+        _productosFiltrados = _todos;
+        _cargando = false;
+    }
+    private void FiltrarPor(string categoria)
+    {
+        _categoriaActual = categoria;
+        _productosFiltrados = categoria == "Todos"
+            ? _todos
+            : _todos.Where(p => p.Category == categoria).ToList();
+    }
+}

@@ -1,0 +1,32 @@
+﻿<section class="testimonios">
+    <h2>💬 Lo que dicen nuestros clientes 🩷</h2>
+    <div class="testimonios-grid">
+        @foreach (var t in _testimonios)
+        {
+            <div class="testimonio-card">
+                <p>"@t.Texto"</p>
+                <div class="autor">— @t.Autor</div>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private record Testimonio(string Texto, string Autor);
+
+    private readonly List<Testimonio> _testimonios =
+    [
+        new("Considero que estos bizcochos están hechos con amor; ¡simplemente perfectos!",
+            "Melani G."),
+        new("De las mejores reposterías que hay en el país, exquisitos.",
+            "Jesús R."),
+        new("Muy puntuales, todos los productos son de la más alta calidad. A mi novia le encanta el waffle de fresa.",
+            "Daniel C."),
+        new("Wow, de verdad que esta repostería es el final!! Compré par de pasteles para mi cumpleaños y a todos les gustó.",
+            "Andrea M."),
+        new("Merece más reconocimiento. El donut de fresa es PERFECTO.",
+            "Pedro B."),
+        new("El waffle clásico de C4NDYST4R es insuperable. Nunca cambien!",
+            "Azael G."),
+    ];
+}

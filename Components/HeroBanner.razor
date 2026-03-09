@@ -1,0 +1,13 @@
+﻿<section class="hero">
+    <img src="images/banner.png" alt="banner" class="hero__img" />
+    <div class="hero__content">
+        <h1>@Titulo</h1>
+        <p>@Subtitulo</p>
+        <a href="menu" class="btn-principal">Ver Menú</a>
+    </div>
+</section>
+
+@code {
+    [Parameter] public string Titulo { get; set; } = "Bienvenidos";
+    [Parameter] public string Subtitulo { get; set; } = "";
+}

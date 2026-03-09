@@ -1,0 +1,175 @@
+﻿@page "/pedidos"
+@using LP2Parcial2.Components
+@using LP2Parcial2.Models
+@using LP2Parcial2.Services
+@inject IProductoService ProductoSvc
+@inject IConfiguration Config
+@inject ILogger<Pedidos> Logger
+@using System.Net.Http.Json
+
+<PageTitle>Pedidos — C4NDYST4R</PageTitle>
+
+@if (_paso == 1)
+{
+    <h1 style="text-align:center;padding:2rem 1rem .5rem;color:var(--de-cafe);">
+        🛍️ ¿Qué deseas pedir? 🛍️
+    </h1>
+    <p style="text-align:center;color:#888;padding:.3rem 1rem 1.5rem;">
+        ¡Selecciona tus productos favoritos! Puedes agregar o quitar productos antes de confirmar con los botones + y -.
+    </p>
+
+    @if (_cargando)
+    {
+        <p style="text-align:center;padding:3rem;">⏳ Cargando productos...</p>
+    }
+    else
+    {
+        <div class="grid-productos">
+            @foreach (var prod in _productos)
+            {
+                var item = _carrito.FirstOrDefault(i => i.Producto.Title == prod.Title);
+
+                <ProductoCardPedido Producto="@prod"
+                                    EsSeleccionado="@(item != null)"
+                                    Cantidad="@(item?.Cantidad ?? 1)"
+                                    OnToggle="@ToggleProducto"
+                                    OnAgregar="@AgregarUno"
+                                    OnReducir="@ReducirUno" />
+            }
+        </div>
+    }
+
+    @if (_carrito.Any())
+    {
+        <div class="barra-continuar">
+            <span class="resumen-txt">
+                <strong>@_carrito.Count producto(s)</strong> seleccionado(s)
+            </span>
+            <button class="btn-continuar"
+                    @onclick="() => _paso = 2">
+                Continuar →
+            </button>
+        </div>
+    }
+}
+
+
+else if (_paso == 2)
+{
+    <FormularioPedido Items="@_carrito"
+                      OnConfirmar="@ConfirmarPedido"
+                      OnVolver="@(() => _paso = 1)" />
+}
+
+else if (_paso == 3)
+{
+    <div class="confirmacion-exito">
+        <div class="icono">🎉</div>
+        <h2>¡Pedido recibido, @_pedidoConfirmado?.NombreCliente!</h2>
+        <p>
+            Te contactaremos al <strong>@_pedidoConfirmado?.Telefono</strong>
+            para confirmar la entrega en:<br />
+            <strong>@_pedidoConfirmado?.Ubicacion</strong>
+        </p>
+        @if (_pedidoConfirmado?.DescuentoUsado == true)
+        {
+            <p style="color:#27ae60;font-weight:600;">
+                🏷️ ¡Descuento del 10% aplicado!
+            </p>
+        }
+        <p style="color:var(--de-rosa);font-weight:700;font-size:1.3rem;">
+            Total pagado: $@_pedidoConfirmado?.TotalFinal.ToString("F2")
+        </p>
+        <button class="btn-continuar" @onclick="NuevoPedido">
+            Hacer otro pedido
+        </button>
+    </div>
+}
+
+@code {
+    private int _paso = 1;
+    private bool _cargando = true;
+    private List<Producto> _productos = new();
+    private List<ItemCarrito> _carrito = new();
+    private Pedido? _pedidoConfirmado;
+
+    [Inject] private HttpClient Http { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Logger.LogInformation("[Pedidos] Cargando catálogo.");
+        _productos = await ProductoSvc.ObtenerProductosAsync();
+        _cargando = false;
+    }
+
+    private void ToggleProducto(Producto prod)
+    {
+        var existente = _carrito.FirstOrDefault(i => i.Producto.Id == prod.Id);
+        if (existente is null)
+            _carrito.Add(new ItemCarrito { Producto = prod, Cantidad = 1 });
+        else
+            _carrito.Remove(existente);
+    }
+
+    private void AgregarUno(Producto prod)
+    {
+        var item = _carrito.FirstOrDefault(i => i.Producto.Title == prod.Title);
+        if (item is not null) item.Cantidad++;
+    }
+
+    private void ReducirUno(Producto prod)
+    {
+        var item = _carrito.FirstOrDefault(i => i.Producto.Title == prod.Title);
+        if (item is null) return;
+        item.Cantidad--;
+        if (item.Cantidad <= 0) _carrito.Remove(item);
+    }
+
+    private async Task ConfirmarPedido(Pedido pedido)
+    {
+        pedido.Items = _carrito.Select(i => new ItemCarrito
+        {
+            Producto = i.Producto,
+            Cantidad = i.Cantidad
+        }).ToList();
+
+        var pedidoApi = new
+        {
+            NombreCliente = pedido.NombreCliente,
+            Telefono = pedido.Telefono,
+            Ubicacion = pedido.Ubicacion,
+            Comentarios = pedido.Comentarios,
+            TotalFinal = pedido.TotalFinal,
+            DescuentoUsado = pedido.DescuentoUsado,
+            Items = _carrito.Select(i => new
+            {
+                NombreProducto = i.Producto.Title,
+                PrecioUnitario = i.Producto.Price,
+                Cantidad = i.Cantidad
+            }).ToList()
+        };
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("/api/Pedidos", pedidoApi);
+            if (response.IsSuccessStatusCode)
+                Logger.LogInformation("[Pedidos] Pedido guardado en la API.");
+            else
+                Logger.LogWarning("[Pedidos] Error al guardar: {Status}", response.StatusCode);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "[Pedidos] Error al conectar con la API.");
+        }
+
+        _pedidoConfirmado = pedido;
+        _paso = 3;
+    }
+
+    private void NuevoPedido()
+    {
+        _carrito.Clear();
+        _pedidoConfirmado = null;
+        _paso = 1;
+    }
+}

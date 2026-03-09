@@ -1,0 +1,26 @@
+﻿@inherits LayoutComponentBase
+@inject IConfiguration Config
+
+<header class="de-header">
+
+    <NavLink href="" Match="NavLinkMatch.All" class="de-header__brand">
+        <img src="images/logo.png" alt="C4NDYST4R" height="58"/>
+    </NavLink>
+    <nav class="de-header__nav">
+        <NavLink href="" Match="NavLinkMatch.All">Inicio</NavLink>
+        <NavLink href="menu">Menú</NavLink>
+        <NavLink href="pedidos">Pedidos</NavLink>
+    </nav>
+
+    <div class="de-header__spacer"></div>
+
+</header>
+
+<main class="de-main">
+    @Body
+</main>
+
+<footer class="de-footer">
+    <p>⭐ @Config["AppInfo:Nombre"] — Hecho por Emily Gross y Lorena Ogando</p>
+    <p>&copy; @DateTime.Now.Year — Todos los derechos reservados</p>
+</footer>

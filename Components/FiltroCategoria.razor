@@ -1,0 +1,15 @@
+﻿<div class="filtros">
+    @foreach (var cat in Categorias)
+    {
+        <button class="@(cat == CategoriaActual ? "activo" : "")"
+                @onclick="() => OnCategoriaSeleccionada.InvokeAsync(cat)">
+            @cat
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public List<string> Categorias { get; set; } = new();
+    [Parameter] public string CategoriaActual { get; set; } = "Todos";
+    [Parameter] public EventCallback<string> OnCategoriaSeleccionada { get; set; }
+}

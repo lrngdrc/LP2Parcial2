@@ -1,0 +1,158 @@
+﻿@using LP2Parcial2.Models
+
+<div class="form-confirmacion">
+    <h2>🛒 Confirma tu pedido 🛒</h2>
+    <div class="resumen-productos">
+        <h4>📦 Productos seleccionados</h4>
+        @foreach (var item in Items)
+        {
+            <div class="resumen-item">
+                <span class="nombre">@item.Producto.Title</span>
+                <span style="color:#888;font-size:.85rem;">
+                    $@item.Producto.Price.ToString("F2") × @(item.Cantidad)
+                </span>
+                <span class="qty">$@((item.Producto.Price * item.Cantidad).ToString("F2"))</span>
+            </div>
+        }
+
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    margin-top:.8rem;padding-top:.8rem;border-top:1px dashed #e0d0c0;">
+            <span style="color:#888;font-size:.9rem;">Subtotal</span>
+            <span style="color:#888;font-size:.9rem;">
+                $@_subtotal.ToString("F2")
+            </span>
+        </div>
+
+        @if (_descuentoAplicado)
+        {
+            <div style="display:flex;justify-content:space-between;align-items:center;
+                            margin-top:.4rem;">
+                <span style="color:#27ae60;font-size:.9rem;font-weight:600;">
+                    🎉 Descuento 10% (I4M4C4NDY)
+                </span>
+                <span style="color:#27ae60;font-size:.9rem;font-weight:600;">
+                    −$@_montoDescuento.ToString("F2")
+                </span>
+            </div>
+        }
+        <div style="display:flex;justify-content:space-between;align-items:center;
+                    margin-top:.8rem;padding-top:.8rem;border-top:2px solid var(--de-rosa);">
+            <strong style="color:var(--de-cafe);font-size:1rem;">Total</strong>
+            <strong style="color:var(--de-rosa);font-size:1.2rem;">
+                $@_totalFinal.ToString("F2")
+            </strong>
+        </div>
+    </div>
+
+    <label>🏷️ Código de descuento</label>
+    <div style="display:flex;gap:.6rem;margin-bottom:1.2rem;">
+        <input @bind="_codigoIngresado"
+               @bind:event="oninput"
+               placeholder="Escribe tu código aquí"
+               style="margin-bottom:0;"
+               disabled="@_descuentoAplicado" />
+        <button class="btn-codigo"
+                @onclick="AplicarCodigo"
+                disabled="@_descuentoAplicado">
+            @(_descuentoAplicado ? "✓ Aplicado" : "Aplicar")
+        </button>
+    </div>
+
+    @if (_codigoInvalido)
+    {
+        <p style="color:#c0392b;font-size:.85rem;margin-top:-.8rem;margin-bottom:1rem;">
+            ❌ Código incorrecto. Intenta de nuevo.
+        </p>
+    }
+
+    <div class="form-row">
+        <div>
+            <label>👤 Nombre</label>
+            <input @bind="_pedido.NombreCliente"
+                   placeholder="Tu nombre completo" />
+        </div>
+        <div>
+            <label>📞 Teléfono</label>
+            <input @bind="_pedido.Telefono"
+                   placeholder="809-000-0000"
+                   type="tel" />
+        </div>
+    </div>
+
+    <label>📍 Ubicación / Dirección de entrega</label>
+    <input @bind="_pedido.Ubicacion"
+           placeholder="Calle, número, sector, ciudad..." />
+
+    <label>💭 Comentarios</label>
+    <textarea @bind="_pedido.Comentarios"
+              rows="3"
+              placeholder="Sin gluten, feliz cumpleaños, hora de entrega...">
+    </textarea>
+
+    @if (_mostrarError)
+    {
+        <p style="color:#c0392b;font-size:.85rem;margin-bottom:1rem;">
+            ⚠️ Por favor completa nombre, teléfono y ubicación.
+        </p>
+    }
+
+    <div>
+        <button class="btn-volver" @onclick="() => OnVolver.InvokeAsync()">
+            ← Volver
+        </button>
+        <button class="btn-enviar-final" @onclick="Enviar">
+            Enviar Pedido ⭐
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<ItemCarrito> Items { get; set; } = new();
+    [Parameter] public EventCallback<Pedido> OnConfirmar { get; set; }
+    [Parameter] public EventCallback OnVolver { get; set; }
+
+    private Pedido _pedido = new();
+    private bool _mostrarError = false;
+
+    private const string CodigoValido = "I4M4C4NDY";
+    private const double PorcentajeDesc = 0.10;
+
+    private string _codigoIngresado = string.Empty;
+    private bool _descuentoAplicado = false;
+    private bool _codigoInvalido = false;
+
+    private double _subtotal => Items.Sum(i => i.Producto.Price * i.Cantidad);
+    private double _montoDescuento => _descuentoAplicado ? _subtotal * PorcentajeDesc : 0;
+    private double _totalFinal => _subtotal - _montoDescuento;
+
+    private void AplicarCodigo()
+    {
+        if (_codigoIngresado.Trim().ToUpper() == CodigoValido)
+        {
+            _descuentoAplicado = true;
+            _codigoInvalido = false;
+        }
+        else
+        {
+            _codigoInvalido = true;
+            _descuentoAplicado = false;
+        }
+    }
+
+    private async Task Enviar()
+    {
+        if (string.IsNullOrWhiteSpace(_pedido.NombreCliente) ||
+            string.IsNullOrWhiteSpace(_pedido.Telefono) ||
+            string.IsNullOrWhiteSpace(_pedido.Ubicacion))
+        {
+            _mostrarError = true;
+            return;
+        }
+
+        _pedido.Items = Items;
+        _pedido.TotalFinal = _totalFinal;
+        _pedido.DescuentoUsado = _descuentoAplicado;
+        await OnConfirmar.InvokeAsync(_pedido);
+    }
+}

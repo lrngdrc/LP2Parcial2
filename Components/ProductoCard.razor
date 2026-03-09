@@ -1,0 +1,16 @@
+﻿@using LP2Parcial2.Models
+
+<div class="producto-card">
+    <img src="@Producto.Thumbnail" alt="@Producto.Title" loading="lazy" />
+    <div class="info">
+        <h3>@Producto.Title</h3>
+        <p style="font-size:.85rem;color:#777;margin:.3rem 0;">@Producto.Description[..Math.Min(60, Producto.Description.Length)]…</p>
+        <div class="precio">$@Producto.Price.ToString("F2")</div>
+        <small style="color:#aaa;">⭐ @Producto.Rating.ToString("F1")</small>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Producto Producto { get; set; } = new();
+}

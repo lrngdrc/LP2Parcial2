@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../LP2Parcial2API/LP2Parcial2API.csproj" />
+  <Project Path="LP2Parcial2.csproj" />
+</Solution>
